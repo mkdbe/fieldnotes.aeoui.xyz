@@ -269,7 +269,164 @@ app.post('/api/notes/:id/duplicate', requireAuth, function(req, res) {
   res.json({ id: result.lastInsertRowid });
 });
 
-// API: Nextcloud sync
+// ============================================================
+// RECIPROCITY CALCULATOR
+// ============================================================
+
+var FILM_DATA = {
+  // === ILFORD (official p-factors from Ilford tech docs) ===
+  'HP5+':       { type: 'power', p: 1.31, name: 'Ilford HP5 Plus 400', threshold: 1 },
+  'FP4+':       { type: 'power', p: 1.26, name: 'Ilford FP4 Plus 125', threshold: 1 },
+  'Delta 100':  { type: 'power', p: 1.26, name: 'Ilford Delta 100', threshold: 1 },
+  'Delta 400':  { type: 'power', p: 1.41, name: 'Ilford Delta 400', threshold: 1 },
+  'Delta 3200': { type: 'power', p: 1.33, name: 'Ilford Delta 3200', threshold: 1 },
+
+  // === KODAK B&W ===
+  'Tri-X 400':  { type: 'power', p: 1.54, name: 'Kodak Tri-X 400', threshold: 1 },
+  'TMAX 100':   { type: 'power', p: 1.15, name: 'Kodak T-Max 100', threshold: 1 },
+  'TMAX 400':   { type: 'power', p: 1.24, name: 'Kodak T-Max 400', threshold: 1 },
+
+  // === KODAK COLOR ===
+  'Portra 160': { type: 'table', name: 'Kodak Portra 160', threshold: 1,
+    points: [[1,1],[2,2.5],[4,6],[8,14],[10,18],[15,32],[30,80],[60,200],[100,400]] },
+  'Portra 400': { type: 'table', name: 'Kodak Portra 400', threshold: 1,
+    points: [[1,1],[2,2.5],[4,6],[8,14],[10,18],[15,32],[30,80],[60,200],[100,400]] },
+  'Ektar 100':  { type: 'table', name: 'Kodak Ektar 100', threshold: 10,
+    points: [[1,1],[4,4],[8,8],[10,10],[16,20],[32,40],[64,115],[138,256],[256,563]] },
+
+  // === FOMAPAN (fitted from datasheet / community data) ===
+  'Fomapan 100': { type: 'gainer', a: 1.5, b: 1.62, name: 'Fomapan 100 Classic', threshold: 1 },
+  'Fomapan 200': { type: 'gainer', a: 1.07, b: 1.44, name: 'Fomapan 200 Creative', threshold: 1 },
+  'Fomapan 400': { type: 'table', name: 'Fomapan 400 Action', threshold: 1,
+    points: [[1,1.5],[2,3],[4,6],[8,12],[10,15],[30,45],[60,90],[100,150]] },
+
+  // === FUJI ===
+  'Acros 100 II': { type: 'acros', name: 'Fuji Neopan Acros 100 II', threshold: 120 },
+
+  // === CINESTILL ===
+  'CineStill 800T': { type: 'table', name: 'CineStill 800T', threshold: 1,
+    points: [[1,1.5],[2,3.5],[4,8],[8,18],[10,25],[15,40],[30,100],[60,250]] }
+};
+
+function calculateReciprocity(filmKey, meteredSeconds) {
+  var film = FILM_DATA[filmKey];
+  if (!film) return null;
+
+  var tm = parseFloat(meteredSeconds);
+  if (isNaN(tm) || tm <= 0) return null;
+
+  var tc;
+
+  if (tm < film.threshold) {
+    tc = tm;
+  } else if (film.type === 'power') {
+    tc = Math.pow(tm, film.p);
+  } else if (film.type === 'gainer') {
+    tc = tm + film.a * Math.pow(tm, film.b);
+  } else if (film.type === 'acros') {
+    if (tm <= 120) {
+      tc = tm;
+    } else {
+      tc = tm * 1.41; // +0.5 stop beyond 120s
+    }
+  } else if (film.type === 'table') {
+    tc = interpolateTable(film.points, tm);
+  } else {
+    tc = tm;
+  }
+
+  var stopsAdded = tc > tm ? Math.log2(tc / tm) : 0;
+
+  return {
+    film: film.name,
+    film_key: filmKey,
+    metered_seconds: tm,
+    adjusted_seconds: Math.round(tc * 10) / 10,
+    metered_display: formatTime(tm),
+    adjusted_display: formatTime(Math.round(tc * 10) / 10),
+    stops_added: Math.round(stopsAdded * 10) / 10,
+    formula_type: film.type,
+    note: tc === tm ? 'No compensation needed' : null
+  };
+}
+
+function interpolateTable(points, tm) {
+  if (tm <= points[0][0]) return points[0][1];
+  if (tm >= points[points.length - 1][0]) {
+    var last = points[points.length - 1];
+    var prev = points[points.length - 2];
+    var slope = Math.log(last[1] / prev[1]) / Math.log(last[0] / prev[0]);
+    return last[1] * Math.pow(tm / last[0], slope);
+  }
+  for (var i = 0; i < points.length - 1; i++) {
+    if (tm >= points[i][0] && tm <= points[i + 1][0]) {
+      var x0 = Math.log(points[i][0]);
+      var x1 = Math.log(points[i + 1][0]);
+      var y0 = Math.log(points[i][1]);
+      var y1 = Math.log(points[i + 1][1]);
+      var t = (Math.log(tm) - x0) / (x1 - x0);
+      return Math.exp(y0 + t * (y1 - y0));
+    }
+  }
+  return tm;
+}
+
+function formatTime(seconds) {
+  if (seconds < 60) {
+    return seconds + 's';
+  } else if (seconds < 3600) {
+    var m = Math.floor(seconds / 60);
+    var s = Math.round(seconds % 60);
+    return s > 0 ? m + 'm ' + s + 's' : m + 'm';
+  } else {
+    var h = Math.floor(seconds / 3600);
+    var rem = Math.round(seconds % 3600);
+    var mi = Math.floor(rem / 60);
+    return mi > 0 ? h + 'h ' + mi + 'm' : h + 'h';
+  }
+}
+
+// API: GET /api/reciprocity?film=HP5+&time=10
+app.get('/api/reciprocity', requireAuth, function(req, res) {
+  var filmKey = req.query.film;
+  var meteredTime = req.query.time;
+
+  if (!filmKey && !meteredTime) {
+    var films = Object.keys(FILM_DATA).map(function(key) {
+      return { key: key, name: FILM_DATA[key].name, type: FILM_DATA[key].type };
+    });
+    return res.json({ films: films });
+  }
+
+  if (!filmKey || !meteredTime) {
+    return res.status(400).json({ error: 'Both film and time parameters required' });
+  }
+
+  var result = calculateReciprocity(filmKey, meteredTime);
+  if (!result) {
+    return res.status(400).json({ error: 'Invalid film stock or time value' });
+  }
+
+  res.json(result);
+});
+
+// API: POST /api/reciprocity/batch
+app.post('/api/reciprocity/batch', requireAuth, function(req, res) {
+  var meteredTime = req.body.time;
+  if (!meteredTime) return res.status(400).json({ error: 'time required' });
+
+  var results = {};
+  Object.keys(FILM_DATA).forEach(function(key) {
+    results[key] = calculateReciprocity(key, meteredTime);
+  });
+
+  res.json(results);
+});
+
+// ============================================================
+// NEXTCLOUD SYNC
+// ============================================================
+
 app.post('/api/sync', requireAuth, async function(req, res) {
   try {
     var unsynced = db.prepare(

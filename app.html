@@ -5,6 +5,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Field Notes</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Field Notes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -308,6 +311,145 @@ body {
   background: none; border: none; color: #fff; font-size: 1.8rem; cursor: pointer;
 }
 
+/* ===== RECIPROCITY CALCULATOR ===== */
+.recip-trigger {
+  display: flex; gap: 0.5rem; align-items: stretch;
+}
+.recip-trigger input { flex: 1; }
+.recip-trigger .recip-btn {
+  background: var(--red-dim); border: 1px solid var(--border);
+  color: var(--red); padding: 0 0.8rem; font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.85rem; letter-spacing: 0.1em; cursor: pointer;
+  white-space: nowrap; transition: all 0.2s;
+}
+.recip-trigger .recip-btn:active { background: var(--red); color: #fff; }
+
+.recip-modal {
+  display: none; position: fixed; inset: 0; z-index: 400;
+  background: var(--bg); overflow-y: auto;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(var(--safe-bottom) + 1rem);
+}
+.recip-modal.active { display: block; }
+
+.recip-header {
+  position: sticky; top: 0; z-index: 401;
+  padding: 0.6rem 1rem;
+  background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.recip-header h2 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
+  letter-spacing: 0.15em; color: var(--text-bright);
+}
+.recip-header h2 span { color: var(--red); }
+
+.recip-body { padding: 1rem 1.2rem; }
+
+.recip-input-group {
+  display: grid; grid-template-columns: 1fr auto; gap: 0.8rem;
+  align-items: end; margin-bottom: 1.5rem;
+}
+.recip-input-group .field-group { margin-bottom: 0; }
+.recip-calc-btn {
+  padding: 0.65rem 1.2rem; background: var(--red); border: none;
+  color: #fff; font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+  letter-spacing: 0.1em; cursor: pointer;
+}
+.recip-calc-btn:active { background: var(--red-hover); }
+
+.recip-film-selector { margin-bottom: 1.5rem; }
+.recip-film-pills {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+}
+.recip-pill {
+  padding: 0.35rem 0.7rem; background: var(--surface);
+  border: 1px solid var(--border); color: var(--text-dim);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem;
+  font-weight: 500; cursor: pointer; transition: all 0.2s;
+}
+.recip-pill.active {
+  background: var(--red-dim); border-color: var(--red);
+  color: var(--red);
+}
+.recip-pill:active { border-color: var(--red); }
+
+.recip-result-card {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 1.2rem; margin-bottom: 0.8rem;
+  display: none;
+}
+.recip-result-card.show { display: block; }
+
+.recip-result-hero {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border);
+}
+.recip-metered {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem; color: var(--text-dim);
+}
+.recip-metered strong {
+  font-size: 1.6rem; color: var(--text-bright); font-weight: 600;
+}
+.recip-arrow { color: var(--text-dim); font-size: 1.2rem; padding: 0 0.5rem; }
+.recip-adjusted {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem; color: var(--red); text-align: right;
+}
+.recip-adjusted strong {
+  font-size: 2rem; font-weight: 600; display: block; line-height: 1.1;
+}
+
+.recip-stops {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 0.85rem; color: var(--label);
+  text-align: center; margin-top: 0.2rem;
+}
+
+.recip-all-results { margin-top: 1.5rem; }
+.recip-all-header {
+  font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem;
+  letter-spacing: 0.2em; color: var(--red); margin-bottom: 0.6rem;
+  padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);
+}
+.recip-all-table { width: 100%; border-collapse: collapse; }
+.recip-all-table td {
+  padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.recip-all-table td:first-child {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 500; color: var(--text);
+}
+.recip-all-table td:nth-child(2) {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600; color: var(--text-bright); text-align: right;
+}
+.recip-all-table td:nth-child(3) {
+  font-size: 0.7rem; color: var(--text-dim); text-align: right;
+  white-space: nowrap;
+}
+.recip-all-table tr.active td { color: var(--red); }
+.recip-all-table tr.active td:first-child { color: var(--red); }
+.recip-all-table tr { cursor: pointer; }
+.recip-all-table tr:active td { color: var(--red); }
+
+.recip-use-btn {
+  position: sticky; bottom: 0;
+  padding: 0.8rem 1rem calc(var(--safe-bottom) + 0.8rem);
+  background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+}
+.recip-use-btn button {
+  width: 100%; padding: 0.7rem;
+  background: var(--red); border: none; color: #fff;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+  letter-spacing: 0.1em; cursor: pointer;
+}
+.recip-use-btn button:hover { background: var(--red-hover); }
+
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: #222; }
@@ -421,7 +563,12 @@ body {
     <div class="advanced-fields" id="advancedFields">
       <div class="field-group"><label>Filter Factor</label><input type="text" id="f_filter_factor" placeholder="e.g., Yellow #8 (+1 stop), Red #25 (+3 stops)"></div>
       <div class="field-group"><label>Bellows Extension Factor</label><input type="text" id="f_bellows_extension" placeholder="e.g., +1.5 stops at 1:2 ratio"></div>
-      <div class="field-group"><label>Reciprocity Compensation</label><input type="text" id="f_reciprocity" placeholder="e.g., Metered 4s, Adjusted 12s (Fomapan)"></div>
+      <div class="field-group"><label>Reciprocity Compensation</label>
+        <div class="recip-trigger">
+          <input type="text" id="f_reciprocity" placeholder="e.g., Metered 4s &#x2192; 12s (Fomapan 100)">
+          <button type="button" class="recip-btn" onclick="openRecipCalc()">CALC</button>
+        </div>
+      </div>
     </div>
 
     <div class="field-group" style="margin-top:1rem;"><label>Notes</label>
@@ -454,6 +601,46 @@ body {
   <img id="photoViewerImg" src="">
 </div>
 
+<!-- Reciprocity calculator modal -->
+<div class="recip-modal" id="recipModal">
+  <div class="recip-header">
+    <h2>RECIPROCITY <span>CALC</span></h2>
+    <button class="header-btn" onclick="closeRecipCalc()">CLOSE</button>
+  </div>
+  <div class="recip-body">
+    <div class="recip-film-selector">
+      <div class="section-label" style="margin-top:0">FILM STOCK</div>
+      <div class="recip-film-pills" id="recipFilmPills"></div>
+    </div>
+    <div class="recip-input-group">
+      <div class="field-group">
+        <label>Metered Time (seconds)</label>
+        <input type="number" id="recipMeteredTime" placeholder="e.g., 8" inputmode="decimal" min="0.1" step="any">
+      </div>
+      <button class="recip-calc-btn" onclick="calcReciprocity()">CALC</button>
+    </div>
+    <div class="recip-result-card" id="recipResultCard">
+      <div class="recip-result-hero">
+        <div class="recip-metered">
+          Metered<br><strong id="recipMeteredDisplay">&#8212;</strong>
+        </div>
+        <div class="recip-arrow">&#x2192;</div>
+        <div class="recip-adjusted">
+          Adjusted<br><strong id="recipAdjustedDisplay">&#8212;</strong>
+        </div>
+      </div>
+      <div class="recip-stops" id="recipStops"></div>
+    </div>
+    <div class="recip-all-results" id="recipAllResults" style="display:none">
+      <div class="recip-all-header">ALL FILM STOCKS</div>
+      <table class="recip-all-table" id="recipAllTable"></table>
+    </div>
+  </div>
+  <div class="recip-use-btn">
+    <button onclick="useRecipResult()">USE THIS VALUE</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -466,6 +653,12 @@ document.addEventListener('DOMContentLoaded', function() {
   loadNotes();
   document.getElementById('cameraInput').addEventListener('change', handlePhotoCapture);
   document.getElementById('uploadInput').addEventListener('change', handlePhotoCapture);
+  var recipInput = document.getElementById('recipMeteredTime');
+  if (recipInput) {
+    recipInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); calcReciprocity(); }
+    });
+  }
 });
 
 function loadNotes() {
@@ -517,7 +710,6 @@ function viewNote(id) {
       var html = '';
       html += '<div class="viewer-subject">' + (note.subject || 'Untitled') + '</div>';
 
-      // Meta line
       html += '<div class="viewer-meta">';
       html += '<span>' + note.date + ' &middot; ' + note.time + '</span>';
       if (note.location_name) html += '<span>' + note.location_name + '</span>';
@@ -527,7 +719,6 @@ function viewNote(id) {
       }
       html += '</div>';
 
-      // Photos
       if (note.photos && note.photos.length > 0) {
         html += '<div class="viewer-photos">';
         for (var i = 0; i < note.photos.length; i++) {
@@ -536,7 +727,6 @@ function viewNote(id) {
         html += '</div>';
       }
 
-      // Exposure table
       html += '<div class="viewer-section">EQUIPMENT &amp; FILM</div>';
       html += '<table class="viewer-table">';
       if (note.camera) html += '<tr><td>Camera</td><td>' + note.camera + '</td></tr>';
@@ -553,7 +743,6 @@ function viewNote(id) {
       html += '<tr><td>Development</td><td>' + note.development + '</td></tr>';
       html += '</table>';
 
-      // Advanced
       if (note.filter_factor || note.bellows_extension || note.reciprocity) {
         html += '<div class="viewer-section">COMPENSATION</div>';
         html += '<table class="viewer-table">';
@@ -563,7 +752,6 @@ function viewNote(id) {
         html += '</table>';
       }
 
-      // Notes
       if (note.notes) {
         html += '<div class="viewer-section">NOTES</div>';
         html += '<div class="viewer-notes">' + note.notes + '</div>';
@@ -727,7 +915,6 @@ function saveNote() {
       showToast('Exposure saved');
       closeEditor();
       loadNotes();
-      // Open viewer for the saved note
       setTimeout(function() { viewNote(savedId); }, 300);
     })
     .catch(function() { showToast('Failed to save'); });
@@ -891,6 +1078,161 @@ function syncToNextcloud() {
     })
     .catch(function() { showToast('Sync failed'); })
     .finally(function() { btn.textContent = 'SYNC'; });
+}
+
+// ===== RECIPROCITY CALCULATOR =====
+var recipSelectedFilm = null;
+var recipLastResult = null;
+
+var RECIP_FILM_GROUPS = [
+  { label: 'Fomapan', keys: ['Fomapan 100','Fomapan 200','Fomapan 400'] },
+  { label: 'Kodak B&W', keys: ['Tri-X 400','TMAX 100','TMAX 400'] },
+  { label: 'Kodak Color', keys: ['Portra 160','Portra 400','Ektar 100'] },
+  { label: 'Ilford', keys: ['HP5+','FP4+','Delta 100','Delta 400','Delta 3200'] },
+  { label: 'Other', keys: ['Acros 100 II','CineStill 800T'] }
+];
+
+function openRecipCalc() {
+  var currentFilm = document.getElementById('f_film_stock').value;
+  autoSelectFilm(currentFilm);
+
+  var shutterVal = document.getElementById('f_shutter_speed').value;
+  var prefill = parseShutterToSeconds(shutterVal);
+  if (prefill && prefill >= 1) {
+    document.getElementById('recipMeteredTime').value = prefill;
+  }
+
+  // Reset previous results if no time
+  if (!document.getElementById('recipMeteredTime').value) {
+    document.getElementById('recipResultCard').classList.remove('show');
+    document.getElementById('recipAllResults').style.display = 'none';
+  }
+
+  renderFilmPills();
+  document.getElementById('recipModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Auto-calculate if we have both film and time
+  if (recipSelectedFilm && document.getElementById('recipMeteredTime').value) {
+    calcReciprocity();
+  } else {
+    // Focus time input so user can type immediately
+    setTimeout(function() { document.getElementById('recipMeteredTime').focus(); }, 100);
+  }
+}
+
+function closeRecipCalc() {
+  document.getElementById('recipModal').classList.remove('active');
+  document.body.style.overflow = 'hidden'; // Editor still open
+}
+
+function autoSelectFilm(filmStockValue) {
+  var mapping = {
+    'Fomapan 100': 'Fomapan 100', 'Fomapan 200': 'Fomapan 200', 'Fomapan 400': 'Fomapan 400',
+    'TRI-X 320': 'Tri-X 400', 'TRI-X 400': 'Tri-X 400',
+    'TMAX 100': 'TMAX 100', 'TMAX 400': 'TMAX 400',
+    'HP5+': 'HP5+', 'FP4+': 'FP4+',
+    'Delta 100': 'Delta 100', 'Delta 400': 'Delta 400', 'Delta 3200': 'Delta 3200',
+    'Acros 100 II': 'Acros 100 II', 'CineStill 800T': 'CineStill 800T',
+    'Portra 160': 'Portra 160', 'Portra 400': 'Portra 400', 'Ektar 100': 'Ektar 100'
+  };
+  recipSelectedFilm = mapping[filmStockValue] || null;
+}
+
+function parseShutterToSeconds(val) {
+  if (!val) return null;
+  if (val.match(/^1\/\d+$/)) return null;
+  var match = val.match(/^(\d+)s$/);
+  if (match) return parseInt(match[1]);
+  match = val.match(/^(\d+)m$/);
+  if (match) return parseInt(match[1]) * 60;
+  return null;
+}
+
+function renderFilmPills() {
+  var container = document.getElementById('recipFilmPills');
+  var html = '';
+  RECIP_FILM_GROUPS.forEach(function(group) {
+    group.keys.forEach(function(key) {
+      var active = recipSelectedFilm === key ? ' active' : '';
+      html += '<div class="recip-pill' + active + '" onclick="selectRecipFilm(\'' +
+        key.replace(/'/g, "\\'") + '\')">' + key + '</div>';
+    });
+  });
+  container.innerHTML = html;
+}
+
+function selectRecipFilm(key) {
+  recipSelectedFilm = key;
+  renderFilmPills();
+  if (document.getElementById('recipMeteredTime').value) {
+    calcReciprocity();
+  }
+}
+
+function calcReciprocity() {
+  var tm = parseFloat(document.getElementById('recipMeteredTime').value);
+  if (isNaN(tm) || tm <= 0) {
+    showToast('Enter a metered time');
+    return;
+  }
+
+  if (recipSelectedFilm) {
+    fetch('/api/reciprocity?film=' + encodeURIComponent(recipSelectedFilm) + '&time=' + tm)
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        recipLastResult = data;
+        document.getElementById('recipMeteredDisplay').textContent = data.metered_display;
+        document.getElementById('recipAdjustedDisplay').textContent = data.adjusted_display;
+        document.getElementById('recipStops').textContent =
+          data.stops_added > 0 ? '+' + data.stops_added + ' stops compensation' : 'No compensation needed';
+        document.getElementById('recipResultCard').classList.add('show');
+      })
+      .catch(function() { showToast('Calculation failed'); });
+  }
+
+  fetch('/api/reciprocity/batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ time: tm })
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var table = document.getElementById('recipAllTable');
+      var html = '';
+      RECIP_FILM_GROUPS.forEach(function(group) {
+        group.keys.forEach(function(key) {
+          var r = data[key];
+          if (!r) return;
+          var isActive = recipSelectedFilm === key ? ' class="active"' : '';
+          html += '<tr' + isActive + ' onclick="selectRecipFilm(\'' +
+            key.replace(/'/g, "\\'") + '\')">';
+          html += '<td>' + key + '</td>';
+          html += '<td>' + r.adjusted_display + '</td>';
+          html += '<td>' + (r.stops_added > 0 ? '+' + r.stops_added + ' stops' : '&#8212;') + '</td>';
+          html += '</tr>';
+        });
+      });
+      table.innerHTML = html;
+      document.getElementById('recipAllResults').style.display = 'block';
+    })
+    .catch(function() {});
+}
+
+function useRecipResult() {
+  if (!recipLastResult) {
+    showToast('Calculate a value first');
+    return;
+  }
+  var text = 'Metered ' + recipLastResult.metered_display +
+    ' \u2192 ' + recipLastResult.adjusted_display +
+    ' (' + recipLastResult.film + ')';
+  document.getElementById('f_reciprocity').value = text;
+  closeRecipCalc();
+  showToast('Reciprocity applied');
+
+  document.getElementById('advancedFields').classList.add('open');
+  document.getElementById('advArrow').classList.add('open');
 }
 
 // ===== UI HELPERS =====
