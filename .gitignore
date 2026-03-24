@@ -1,0 +1,5 @@
+node_modules/
+fieldnotes.db
+fieldnotes.db-wal
+fieldnotes.db-shm
+uploads/

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Field Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --surface2: #161616;
+  --border: #1e1e1e;
+  --border-focus: #c0392b;
+  --red: #c0392b;
+  --red-hover: #e74c3c;
+  --red-dim: rgba(192,57,43,0.15);
+  --text: #d4d4d4;
+  --text-dim: #666;
+  --text-bright: #fff;
+  --label: #888;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+.header {
+  position: sticky; top: 0; z-index: 100;
+  padding: calc(var(--safe-top) + 0.6rem) 1rem 0.6rem;
+  background: rgba(10,10,10,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header h1 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+  letter-spacing: 0.15em; color: var(--text-bright);
+}
+.header h1 span { color: var(--red); }
+.header-actions { display: flex; gap: 0.5rem; }
+.header-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  padding: 0.4rem 0.6rem; font-size: 0.75rem; cursor: pointer;
+  font-family: 'Barlow', sans-serif; transition: all 0.2s;
+}
+.header-btn:hover { border-color: var(--red); color: var(--text); }
+.header-btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
+.header-btn.primary:hover { background: var(--red-hover); }
+
+.note-list { padding: 0.5rem; padding-bottom: calc(var(--safe-bottom) + 5rem); }
+
+.note-card {
+  background: var(--surface); border: 1px solid var(--border);
+  margin-bottom: 0.5rem; padding: 0.8rem 1rem; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.note-card:active { border-color: var(--red); }
+.note-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.3rem; }
+.note-card-subject {
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 1.05rem; color: var(--text-bright);
+}
+.note-card-holder {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+  color: var(--red); letter-spacing: 0.05em; white-space: nowrap; margin-left: 0.5rem;
+}
+.note-card-meta {
+  display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem;
+  font-size: 0.75rem; color: var(--text-dim);
+}
+.note-card-meta .tag {
+  background: var(--surface2); padding: 0.15rem 0.4rem; font-size: 0.7rem;
+  color: var(--label);
+}
+
+/* ===== VIEWER ===== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: var(--bg); overflow-y: auto;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(var(--safe-bottom) + 1rem);
+}
+.modal-overlay.active { display: block; }
+
+.modal-header {
+  position: sticky; top: 0; z-index: 201;
+  padding: 0.6rem 1rem;
+  background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-header h2 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
+  letter-spacing: 0.1em; color: var(--text-bright);
+}
+
+.viewer { padding: 1rem 1.2rem; }
+
+.viewer-subject {
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem;
+  letter-spacing: 0.08em; color: var(--text-bright);
+  line-height: 1.1; margin-bottom: 0.5rem;
+}
+
+.viewer-meta {
+  display: flex; flex-wrap: wrap; gap: 0.3rem 1rem;
+  font-size: 0.8rem; color: var(--text-dim);
+  margin-bottom: 1.2rem; padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.viewer-meta a { color: var(--red); text-decoration: none; }
+
+.viewer-photos {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.5rem; margin-bottom: 1.2rem;
+}
+.viewer-photos img {
+  width: 100%; aspect-ratio: 1; object-fit: cover;
+  border: 1px solid var(--border); cursor: pointer;
+}
+
+.viewer-table {
+  width: 100%; border-collapse: collapse; margin-bottom: 1.2rem;
+}
+.viewer-table td {
+  padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border);
+  font-size: 0.85rem; vertical-align: top;
+}
+.viewer-table td:first-child {
+  color: var(--label); font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.1em; width: 35%; font-weight: 500;
+  padding-top: 0.6rem;
+}
+.viewer-table td:last-child {
+  color: var(--text-bright); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 1rem; font-weight: 500;
+}
+
+.viewer-section {
+  font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem;
+  letter-spacing: 0.2em; color: var(--red);
+  margin: 1.5rem 0 0.6rem; padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.viewer-notes {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 0.8rem 1rem; font-size: 0.85rem; color: var(--text);
+  line-height: 1.5; white-space: pre-wrap;
+}
+
+.viewer-actions {
+  position: sticky; bottom: 0;
+  padding: 0.8rem 1rem calc(var(--safe-bottom) + 0.8rem);
+  background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex; gap: 0.5rem;
+}
+
+/* ===== EDITOR ===== */
+.editor { padding: 1rem; }
+
+.field-group { margin-bottom: 1.2rem; }
+.field-group label {
+  display: block; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--label); margin-bottom: 0.35rem;
+  font-weight: 500;
+}
+.field-group input, .field-group select, .field-group textarea {
+  width: 100%; padding: 0.65rem 0.8rem;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 0.9rem;
+  outline: none; transition: border-color 0.2s; appearance: none;
+  -webkit-appearance: none; border-radius: 0;
+}
+.field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+  border-color: var(--red);
+}
+.field-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.8rem center;
+  padding-right: 2rem;
+}
+.field-group textarea { min-height: 80px; resize: vertical; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+
+.location-display {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.8rem; background: var(--surface); border: 1px solid var(--border);
+  font-size: 0.8rem; color: var(--text-dim);
+}
+.location-display a { color: var(--red); text-decoration: none; }
+.location-display .coords { font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem; }
+.location-btn {
+  background: var(--red-dim); border: 1px solid var(--border); color: var(--red);
+  padding: 0.5rem 0.8rem; font-size: 0.8rem; cursor: pointer;
+  font-family: 'Barlow', sans-serif; width: 100%;
+}
+.location-btn:active { background: var(--red); color: #fff; }
+
+.photo-section { margin-bottom: 1.2rem; }
+.photo-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.5rem; margin-bottom: 0.6rem;
+}
+.photo-thumb {
+  aspect-ratio: 1; overflow: hidden; position: relative; border: 1px solid var(--border);
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-thumb .delete-photo {
+  position: absolute; top: 2px; right: 2px;
+  width: 22px; height: 22px; background: rgba(0,0,0,0.7);
+  border: none; color: var(--red); font-size: 1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-buttons { display: flex; gap: 0.5rem; }
+.photo-btn {
+  flex: 1; padding: 0.6rem; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 0.8rem;
+  cursor: pointer; text-align: center; transition: all 0.2s;
+}
+.photo-btn:active { border-color: var(--red); color: var(--text-bright); }
+.photo-btn svg { display: block; margin: 0 auto 0.3rem; }
+
+.section-label {
+  font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem;
+  letter-spacing: 0.2em; color: var(--text-dim);
+  border-bottom: 1px solid var(--border); padding-bottom: 0.3rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.advanced-toggle {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.6rem 0; cursor: pointer; color: var(--text-dim);
+  font-size: 0.8rem; border: none; background: none;
+  font-family: 'Barlow', sans-serif;
+}
+.advanced-toggle .arrow { transition: transform 0.2s; font-size: 0.6rem; }
+.advanced-toggle .arrow.open { transform: rotate(90deg); }
+.advanced-fields { display: none; }
+.advanced-fields.open { display: block; }
+
+.editor-actions {
+  position: sticky; bottom: 0;
+  padding: 0.8rem 1rem calc(var(--safe-bottom) + 0.8rem);
+  background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex; gap: 0.5rem;
+}
+.editor-actions button { flex: 1; }
+.btn-save {
+  padding: 0.7rem; background: var(--red); border: none; color: #fff;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+  letter-spacing: 0.1em; cursor: pointer;
+}
+.btn-save:hover { background: var(--red-hover); }
+.btn-secondary {
+  padding: 0.7rem; background: none; border: 1px solid var(--border); color: var(--text);
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem;
+  letter-spacing: 0.1em; cursor: pointer;
+}
+.btn-secondary:hover { border-color: var(--red); color: var(--text-bright); }
+.btn-delete {
+  padding: 0.7rem; background: none; border: 1px solid var(--border); color: var(--text-dim);
+  font-family: 'Barlow', sans-serif; font-size: 0.85rem; cursor: pointer;
+  max-width: 80px;
+}
+.btn-delete:hover { border-color: var(--red); color: var(--red); }
+
+.empty-state {
+  text-align: center; padding: 4rem 2rem; color: var(--text-dim);
+}
+.empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3; }
+.empty-state p { font-size: 0.85rem; margin-bottom: 0.3rem; }
+
+.toast {
+  position: fixed; bottom: calc(var(--safe-bottom) + 1rem); left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 0.6rem 1.2rem; font-size: 0.85rem;
+  transition: transform 0.3s ease; z-index: 300; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.photo-viewer {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.95);
+  align-items: center; justify-content: center;
+}
+.photo-viewer.active { display: flex; }
+.photo-viewer img { max-width: 95%; max-height: 90vh; object-fit: contain; }
+.photo-viewer-close {
+  position: absolute; top: calc(var(--safe-top) + 0.5rem); right: 0.8rem;
+  background: none; border: none; color: #fff; font-size: 1.8rem; cursor: pointer;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #222; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>FIELD <span>NOTES</span></h1>
+  <div class="header-actions">
+    <button class="header-btn" onclick="syncToNextcloud()" id="syncBtn">SYNC</button>
+    <button class="header-btn primary" onclick="newNote()">+ NEW</button>
+  </div>
+</div>
+
+<div class="note-list" id="noteList"></div>
+
+<!-- VIEWER MODAL -->
+<div class="modal-overlay" id="viewerModal">
+  <div class="modal-header">
+    <h2 id="viewerHolder"></h2>
+    <button class="header-btn" onclick="closeViewer()">CLOSE</button>
+  </div>
+  <div class="viewer" id="viewerContent"></div>
+  <div class="viewer-actions">
+    <button class="btn-secondary" onclick="duplicateFromViewer()">DUPE</button>
+    <button class="btn-save" onclick="editFromViewer()">EDIT</button>
+  </div>
+</div>
+
+<!-- EDITOR MODAL -->
+<div class="modal-overlay" id="editorModal">
+  <div class="modal-header">
+    <h2 id="editorTitle">NEW EXPOSURE</h2>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="header-btn" onclick="closeEditor()">CLOSE</button>
+    </div>
+  </div>
+
+  <div class="editor" id="editorForm">
+    <div class="field-row">
+      <div class="field-group">
+        <label>Date</label>
+        <input type="date" id="f_date">
+      </div>
+      <div class="field-group">
+        <label>Time</label>
+        <input type="time" id="f_time">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Location</label>
+      <div id="locationArea">
+        <button class="location-btn" onclick="getLocation()" id="getLocationBtn">&#x1F4CD; GET CURRENT LOCATION</button>
+      </div>
+      <input type="hidden" id="f_latitude">
+      <input type="hidden" id="f_longitude">
+    </div>
+
+    <div class="field-group">
+      <label>Subject / Scene</label>
+      <input type="text" id="f_subject" placeholder="e.g., Old Oak Tree, River Sunset">
+    </div>
+
+    <div class="photo-section" style="display:none">
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="uploadInput" accept="image/*" style="display:none">
+    </div>
+
+    <div class="section-label">EQUIPMENT</div>
+    <div class="field-row">
+      <div class="field-group"><label>Camera</label>
+        <select id="f_camera"><option value="">&#8212;</option><option value="Calumet 540">Calumet 540</option><option value="Horseman 45FA">Horseman 45FA</option><option value="Other">Other</option></select>
+      </div>
+      <div class="field-group"><label>Lens</label>
+        <select id="f_lens"><option value="">&#8212;</option><option value="Schneider 305mm">Schneider 305mm</option><option value="Schneider 180mm">Schneider 180mm</option><option value="Schneider 90mm">Schneider 90mm</option><option value="Schneider 65mm">Schneider 65mm</option><option value="Rodenstock 135mm">Rodenstock 135mm</option><option value="Other">Other</option></select>
+      </div>
+    </div>
+
+    <div class="section-label">FILM</div>
+    <div class="field-row">
+      <div class="field-group"><label>Film Stock</label>
+        <select id="f_film_stock"><option value="">&#8212;</option><option value="Fomapan 100">Fomapan 100</option><option value="Fomapan 200">Fomapan 200</option><option value="Fomapan 400">Fomapan 400</option><option value="TMAX 100">TMAX 100</option><option value="TMAX 400">TMAX 400</option><option value="TRI-X 320">TRI-X 320</option><option value="TRI-X 400">TRI-X 400</option><option value="CatLab X 80">CatLab X 80</option><option value="CatLab X 100">CatLab X 100</option><option value="HP5+">HP5+</option><option value="FP4+">FP4+</option><option value="Delta 100">Delta 100</option><option value="Delta 400">Delta 400</option><option value="Other">Other</option></select>
+      </div>
+      <div class="field-group"><label>Film Speed (EI)</label>
+        <select id="f_film_speed"><option value="">&#8212;</option><option value="50">50</option><option value="80">80</option><option value="100">100</option><option value="125">125</option><option value="160">160</option><option value="200">200</option><option value="320">320</option><option value="400">400</option><option value="800">800</option><option value="1600">1600</option></select>
+      </div>
+    </div>
+
+    <div class="section-label">EXPOSURE</div>
+    <div class="field-row-3">
+      <div class="field-group"><label>Aperture</label>
+        <select id="f_aperture"><option value="">&#8212;</option><option value="f/4.5">f/4.5</option><option value="f/5.6">f/5.6</option><option value="f/6.3">f/6.3</option><option value="f/8">f/8</option><option value="f/11">f/11</option><option value="f/16">f/16</option><option value="f/22">f/22</option><option value="f/32">f/32</option><option value="f/45">f/45</option><option value="f/64">f/64</option></select>
+      </div>
+      <div class="field-group"><label>Shutter</label>
+        <select id="f_shutter_speed"><option value="">&#8212;</option><option value="1/500">1/500</option><option value="1/400">1/400</option><option value="1/250">1/250</option><option value="1/200">1/200</option><option value="1/125">1/125</option><option value="1/100">1/100</option><option value="1/60">1/60</option><option value="1/50">1/50</option><option value="1/30">1/30</option><option value="1/25">1/25</option><option value="1/15">1/15</option><option value="1/10">1/10</option><option value="1/8">1/8</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="1s">1s</option><option value="2s">2s</option><option value="4s">4s</option><option value="8s">8s</option><option value="15s">15s</option><option value="30s">30s</option><option value="1m">1m</option><option value="2m">2m</option><option value="B (Bulb)">B (Bulb)</option><option value="T (Time)">T (Time)</option></select>
+      </div>
+      <div class="field-group"><label>Holder/Sheet</label>
+        <select id="f_holder_sheet"><option value="">&#8212;</option><option value="1A">1A</option><option value="1B">1B</option><option value="2A">2A</option><option value="2B">2B</option><option value="3A">3A</option><option value="3B">3B</option><option value="4A">4A</option><option value="4B">4B</option><option value="5A">5A</option><option value="5B">5B</option><option value="6A">6A</option><option value="6B">6B</option><option value="7A">7A</option><option value="7B">7B</option><option value="8A">8A</option><option value="8B">8B</option><option value="9A">9A</option><option value="9B">9B</option><option value="10A">10A</option><option value="10B">10B</option></select>
+      </div>
+    </div>
+
+    <div class="field-group"><label>Development</label>
+      <select id="f_development"><option value="Normal">Normal (N)</option><option value="N+1">N+1 (Push 1 stop)</option><option value="N+2">N+2 (Push 2 stops)</option><option value="N-1">N-1 (Pull 1 stop)</option><option value="N-2">N-2 (Pull 2 stops)</option></select>
+    </div>
+
+    <button class="advanced-toggle" onclick="toggleAdvanced()">
+      <span class="arrow" id="advArrow">&#9654;</span> ADVANCED / COMPENSATION
+    </button>
+    <div class="advanced-fields" id="advancedFields">
+      <div class="field-group"><label>Filter Factor</label><input type="text" id="f_filter_factor" placeholder="e.g., Yellow #8 (+1 stop), Red #25 (+3 stops)"></div>
+      <div class="field-group"><label>Bellows Extension Factor</label><input type="text" id="f_bellows_extension" placeholder="e.g., +1.5 stops at 1:2 ratio"></div>
+      <div class="field-group"><label>Reciprocity Compensation</label><input type="text" id="f_reciprocity" placeholder="e.g., Metered 4s, Adjusted 12s (Fomapan)"></div>
+    </div>
+
+    <div class="field-group" style="margin-top:1rem;"><label>Notes</label>
+      <textarea id="f_notes" placeholder="Lighting conditions, movements applied, creative intent..."></textarea>
+    </div>
+
+    <div class="section-label">PHOTOS</div>
+    <div class="photo-grid" id="photoGrid"></div>
+    <div class="photo-buttons" style="margin-bottom:1rem;">
+      <button class="photo-btn" onclick="takePhoto()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="13" r="4"/><path d="M5 7h2l2-3h6l2 3h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"/></svg>
+        Take Photo
+      </button>
+      <button class="photo-btn" onclick="uploadPhoto()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        Upload
+      </button>
+    </div>
+  </div>
+
+  <div class="editor-actions">
+    <button class="btn-delete" onclick="deleteCurrentNote()" id="deleteBtn" style="display:none">DELETE</button>
+    <button class="btn-save" onclick="saveNote()">SAVE EXPOSURE</button>
+  </div>
+</div>
+
+<!-- Photo viewer -->
+<div class="photo-viewer" id="photoViewer" onclick="closePhotoViewer()">
+  <button class="photo-viewer-close">&times;</button>
+  <img id="photoViewerImg" src="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var notes = [];
+var currentNoteId = null;
+var currentNoteData = null;
+var currentPhotos = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadNotes();
+  document.getElementById('cameraInput').addEventListener('change', handlePhotoCapture);
+  document.getElementById('uploadInput').addEventListener('change', handlePhotoCapture);
+});
+
+function loadNotes() {
+  fetch('/api/notes')
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      notes = data;
+      renderNoteList();
+    })
+    .catch(function() { showToast('Failed to load notes'); });
+}
+
+function renderNoteList() {
+  var list = document.getElementById('noteList');
+  if (notes.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">&#x1F4F7;</div><p>No field notes yet.</p><p style="color:var(--text-dim);font-size:0.75rem;">Tap + NEW to log your first exposure.</p></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < notes.length; i++) {
+    var n = notes[i];
+    var hasPhotos = n.photos && n.photos.length > 0;
+    html += '<div class="note-card" onclick="viewNote(' + n.id + ')">';
+    html += '<div class="note-card-header">';
+    html += '<div class="note-card-subject">' + (n.subject || 'Untitled') + (hasPhotos ? ' &#x1F4F7;' : '') + '</div>';
+    html += '<div class="note-card-holder">' + (n.holder_sheet || '&#8212;') + '</div>';
+    html += '</div>';
+    html += '<div class="note-card-meta">';
+    html += '<span>' + n.date + ' ' + n.time + '</span>';
+    html += '<span class="tag">' + (n.film_stock || '&#8212;') + '</span>';
+    html += '<span class="tag">' + (n.aperture || '&#8212;') + ' &middot; ' + (n.shutter_speed || '&#8212;') + '</span>';
+    html += '<span class="tag">' + n.development + '</span>';
+    if (!n.synced_to_nextcloud) html += '<span style="color:var(--red);">&#x2981;</span>';
+    html += '</div></div>';
+  }
+  list.innerHTML = html;
+}
+
+// ===== VIEWER =====
+function viewNote(id) {
+  fetch('/api/notes/' + id)
+    .then(function(res) { return res.json(); })
+    .then(function(note) {
+      currentNoteId = note.id;
+      currentNoteData = note;
+
+      document.getElementById('viewerHolder').textContent = note.holder_sheet || '---';
+
+      var html = '';
+      html += '<div class="viewer-subject">' + (note.subject || 'Untitled') + '</div>';
+
+      // Meta line
+      html += '<div class="viewer-meta">';
+      html += '<span>' + note.date + ' &middot; ' + note.time + '</span>';
+      if (note.location_name) html += '<span>' + note.location_name + '</span>';
+      if (note.latitude && note.longitude) {
+        var mapUrl = 'https://www.openstreetmap.org/?mlat=' + note.latitude + '&mlon=' + note.longitude + '#map=15/' + note.latitude + '/' + note.longitude;
+        html += '<a href="' + mapUrl + '" target="_blank" rel="noopener">View Map &#x2197;</a>';
+      }
+      html += '</div>';
+
+      // Photos
+      if (note.photos && note.photos.length > 0) {
+        html += '<div class="viewer-photos">';
+        for (var i = 0; i < note.photos.length; i++) {
+          html += '<img src="' + note.photos[i].url + '" onclick="viewPhoto(\'' + note.photos[i].url + '\')">';
+        }
+        html += '</div>';
+      }
+
+      // Exposure table
+      html += '<div class="viewer-section">EQUIPMENT &amp; FILM</div>';
+      html += '<table class="viewer-table">';
+      if (note.camera) html += '<tr><td>Camera</td><td>' + note.camera + '</td></tr>';
+      if (note.lens) html += '<tr><td>Lens</td><td>' + note.lens + '</td></tr>';
+      if (note.film_stock) html += '<tr><td>Film</td><td>' + note.film_stock + '</td></tr>';
+      if (note.film_speed) html += '<tr><td>ISO</td><td>' + note.film_speed + '</td></tr>';
+      html += '</table>';
+
+      html += '<div class="viewer-section">EXPOSURE</div>';
+      html += '<table class="viewer-table">';
+      if (note.aperture) html += '<tr><td>Aperture</td><td>' + note.aperture + '</td></tr>';
+      if (note.shutter_speed) html += '<tr><td>Shutter</td><td>' + note.shutter_speed + '</td></tr>';
+      if (note.holder_sheet) html += '<tr><td>Holder / Sheet</td><td>' + note.holder_sheet + '</td></tr>';
+      html += '<tr><td>Development</td><td>' + note.development + '</td></tr>';
+      html += '</table>';
+
+      // Advanced
+      if (note.filter_factor || note.bellows_extension || note.reciprocity) {
+        html += '<div class="viewer-section">COMPENSATION</div>';
+        html += '<table class="viewer-table">';
+        if (note.filter_factor) html += '<tr><td>Filter</td><td>' + note.filter_factor + '</td></tr>';
+        if (note.bellows_extension) html += '<tr><td>Bellows Ext.</td><td>' + note.bellows_extension + '</td></tr>';
+        if (note.reciprocity) html += '<tr><td>Reciprocity</td><td>' + note.reciprocity + '</td></tr>';
+        html += '</table>';
+      }
+
+      // Notes
+      if (note.notes) {
+        html += '<div class="viewer-section">NOTES</div>';
+        html += '<div class="viewer-notes">' + note.notes + '</div>';
+      }
+
+      document.getElementById('viewerContent').innerHTML = html;
+      document.getElementById('viewerModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    })
+    .catch(function() { showToast('Failed to load note'); });
+}
+
+function closeViewer() {
+  document.getElementById('viewerModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function editFromViewer() {
+  closeViewer();
+  setTimeout(function() { editNote(currentNoteId); }, 100);
+}
+
+function duplicateFromViewer() {
+  if (!currentNoteId) return;
+  fetch('/api/notes/' + currentNoteId + '/duplicate', { method: 'POST' })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+      showToast('Duplicated');
+      closeViewer();
+      loadNotes();
+      setTimeout(function() { editNote(result.id); }, 300);
+    })
+    .catch(function() { showToast('Failed to duplicate'); });
+}
+
+// ===== EDITOR =====
+function newNote() {
+  currentNoteId = null;
+  currentPhotos = [];
+
+  var fields = ['subject','camera','lens','film_stock','film_speed','aperture',
+    'shutter_speed','holder_sheet','filter_factor','bellows_extension','reciprocity','notes'];
+  for (var i = 0; i < fields.length; i++) {
+    document.getElementById('f_' + fields[i]).value = '';
+  }
+  document.getElementById('f_development').value = 'Normal';
+  document.getElementById('f_latitude').value = '';
+  document.getElementById('f_longitude').value = '';
+
+  var now = new Date();
+  document.getElementById('f_date').value = now.toISOString().split('T')[0];
+  document.getElementById('f_time').value = now.toTimeString().slice(0, 5);
+
+  document.getElementById('locationArea').innerHTML =
+    '<button class="location-btn" onclick="getLocation()" id="getLocationBtn">&#x1F4CD; GET CURRENT LOCATION</button>';
+  document.getElementById('photoGrid').innerHTML = '';
+  document.getElementById('editorTitle').textContent = 'NEW EXPOSURE';
+  document.getElementById('deleteBtn').style.display = 'none';
+
+  document.getElementById('advancedFields').classList.remove('open');
+  document.getElementById('advArrow').classList.remove('open');
+
+  getLocation();
+  openEditor();
+}
+
+function editNote(id) {
+  fetch('/api/notes/' + id)
+    .then(function(res) { return res.json(); })
+    .then(function(note) {
+      currentNoteId = note.id;
+      currentPhotos = note.photos || [];
+
+      document.getElementById('f_date').value = note.date;
+      document.getElementById('f_time').value = note.time;
+      document.getElementById('f_subject').value = note.subject;
+      document.getElementById('f_camera').value = note.camera;
+      document.getElementById('f_lens').value = note.lens;
+      document.getElementById('f_film_stock').value = note.film_stock;
+      document.getElementById('f_film_speed').value = note.film_speed;
+      document.getElementById('f_aperture').value = note.aperture;
+      document.getElementById('f_shutter_speed').value = note.shutter_speed;
+      document.getElementById('f_holder_sheet').value = note.holder_sheet;
+      document.getElementById('f_development').value = note.development;
+      document.getElementById('f_filter_factor').value = note.filter_factor || '';
+      document.getElementById('f_bellows_extension').value = note.bellows_extension || '';
+      document.getElementById('f_reciprocity').value = note.reciprocity || '';
+      document.getElementById('f_notes').value = note.notes || '';
+      document.getElementById('f_latitude').value = note.latitude || '';
+      document.getElementById('f_longitude').value = note.longitude || '';
+
+      if (note.latitude && note.longitude) {
+        showLocationDisplay(note.latitude, note.longitude, note.location_name);
+      } else {
+        document.getElementById('locationArea').innerHTML =
+          '<button class="location-btn" onclick="getLocation()" id="getLocationBtn">&#x1F4CD; GET CURRENT LOCATION</button>';
+      }
+
+      renderPhotoGrid();
+
+      if (note.filter_factor || note.bellows_extension || note.reciprocity) {
+        document.getElementById('advancedFields').classList.add('open');
+        document.getElementById('advArrow').classList.add('open');
+      } else {
+        document.getElementById('advancedFields').classList.remove('open');
+        document.getElementById('advArrow').classList.remove('open');
+      }
+
+      document.getElementById('editorTitle').textContent = 'EDIT EXPOSURE';
+      document.getElementById('deleteBtn').style.display = '';
+
+      openEditor();
+    })
+    .catch(function() { showToast('Failed to load note'); });
+}
+
+function gatherFormData() {
+  var data = {
+    date: document.getElementById('f_date').value,
+    time: document.getElementById('f_time').value,
+    latitude: parseFloat(document.getElementById('f_latitude').value) || null,
+    longitude: parseFloat(document.getElementById('f_longitude').value) || null,
+    location_name: null,
+    subject: document.getElementById('f_subject').value,
+    camera: document.getElementById('f_camera').value,
+    lens: document.getElementById('f_lens').value,
+    film_stock: document.getElementById('f_film_stock').value,
+    film_speed: document.getElementById('f_film_speed').value,
+    aperture: document.getElementById('f_aperture').value,
+    shutter_speed: document.getElementById('f_shutter_speed').value,
+    holder_sheet: document.getElementById('f_holder_sheet').value,
+    development: document.getElementById('f_development').value,
+    filter_factor: document.getElementById('f_filter_factor').value || null,
+    bellows_extension: document.getElementById('f_bellows_extension').value || null,
+    reciprocity: document.getElementById('f_reciprocity').value || null,
+    notes: document.getElementById('f_notes').value || null
+  };
+  var locNameEl = document.querySelector('.location-name');
+  if (locNameEl) data.location_name = locNameEl.textContent;
+  return data;
+}
+
+function saveNote() {
+  var data = gatherFormData();
+
+  var url = '/api/notes';
+  var method = 'POST';
+  if (currentNoteId) {
+    url = '/api/notes/' + currentNoteId;
+    method = 'PUT';
+  }
+
+  fetch(url, {
+    method: method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+      var savedId = currentNoteId || result.id;
+      showToast('Exposure saved');
+      closeEditor();
+      loadNotes();
+      // Open viewer for the saved note
+      setTimeout(function() { viewNote(savedId); }, 300);
+    })
+    .catch(function() { showToast('Failed to save'); });
+}
+
+function deleteCurrentNote() {
+  if (!currentNoteId) return;
+  if (!confirm('Delete this exposure?')) return;
+
+  fetch('/api/notes/' + currentNoteId, { method: 'DELETE' })
+    .then(function() {
+      showToast('Exposure deleted');
+      closeEditor();
+      loadNotes();
+    })
+    .catch(function() { showToast('Failed to delete'); });
+}
+
+// ===== LOCATION =====
+function getLocation() {
+  var btn = document.getElementById('getLocationBtn');
+  if (btn) btn.textContent = '\u{1F4CD} Getting location...';
+
+  if (!navigator.geolocation) {
+    showToast('Geolocation not supported');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lng = pos.coords.longitude;
+      document.getElementById('f_latitude').value = lat;
+      document.getElementById('f_longitude').value = lng;
+
+      fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json')
+        .then(function(res) { return res.json(); })
+        .then(function(geo) {
+          var locName = '';
+          if (geo.address) {
+            var parts = [];
+            var place = geo.address.hamlet || geo.address.village || geo.address.town || geo.address.city;
+            if (place) parts.push(place);
+            if (geo.address.state) parts.push(geo.address.state);
+            locName = parts.join(', ');
+          }
+          showLocationDisplay(lat, lng, locName);
+        })
+        .catch(function() { showLocationDisplay(lat, lng, ''); });
+    },
+    function() {
+      if (btn) btn.textContent = '\u{1F4CD} GET CURRENT LOCATION';
+      showToast('Location access denied');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function showLocationDisplay(lat, lng, name) {
+  var mapUrl = 'https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lng + '#map=15/' + lat + '/' + lng;
+  var html = '<div class="location-display"><div style="flex:1">';
+  if (name) html += '<div class="location-name" style="color:var(--text);margin-bottom:0.2rem;">' + name + '</div>';
+  html += '<div class="coords">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</div>';
+  html += '</div><a href="' + mapUrl + '" target="_blank" rel="noopener">MAP &#x2197;</a></div>';
+  document.getElementById('locationArea').innerHTML = html;
+}
+
+// ===== PHOTOS =====
+function takePhoto() {
+  if (!currentNoteId) {
+    autoSave(function() { document.getElementById('cameraInput').click(); });
+    return;
+  }
+  document.getElementById('cameraInput').click();
+}
+
+function uploadPhoto() {
+  if (!currentNoteId) {
+    autoSave(function() { document.getElementById('uploadInput').click(); });
+    return;
+  }
+  document.getElementById('uploadInput').click();
+}
+
+function autoSave(callback) {
+  var data = gatherFormData();
+  fetch('/api/notes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+      if (result.id) {
+        currentNoteId = result.id;
+        document.getElementById('editorTitle').textContent = 'EDIT EXPOSURE';
+        document.getElementById('deleteBtn').style.display = '';
+        if (callback) callback();
+      }
+    })
+    .catch(function() { showToast('Failed to save'); });
+}
+
+function handlePhotoCapture(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var formData = new FormData();
+  formData.append('photo', file);
+  fetch('/api/notes/' + currentNoteId + '/photos', { method: 'POST', body: formData })
+    .then(function(res) { return res.json(); })
+    .then(function(photo) {
+      currentPhotos.push(photo);
+      renderPhotoGrid();
+      showToast('Photo added');
+    })
+    .catch(function() { showToast('Upload failed'); });
+  e.target.value = '';
+}
+
+function renderPhotoGrid() {
+  var grid = document.getElementById('photoGrid');
+  var html = '';
+  for (var i = 0; i < currentPhotos.length; i++) {
+    var p = currentPhotos[i];
+    html += '<div class="photo-thumb">';
+    html += '<img src="' + p.url + '" alt="" onclick="event.stopPropagation(); viewPhoto(\'' + p.url + '\')">';
+    html += '<button class="delete-photo" onclick="event.stopPropagation(); deletePhoto(' + p.id + ')">&times;</button>';
+    html += '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function deletePhoto(photoId) {
+  if (!confirm('Delete this photo?')) return;
+  fetch('/api/photos/' + photoId, { method: 'DELETE' })
+    .then(function() {
+      currentPhotos = currentPhotos.filter(function(p) { return p.id !== photoId; });
+      renderPhotoGrid();
+      showToast('Photo deleted');
+    })
+    .catch(function() { showToast('Failed to delete photo'); });
+}
+
+function viewPhoto(url) {
+  document.getElementById('photoViewerImg').src = url;
+  document.getElementById('photoViewer').classList.add('active');
+}
+function closePhotoViewer() {
+  document.getElementById('photoViewer').classList.remove('active');
+}
+
+// ===== SYNC =====
+function syncToNextcloud() {
+  var btn = document.getElementById('syncBtn');
+  btn.textContent = 'SYNCING...';
+  fetch('/api/sync', { method: 'POST' })
+    .then(function(res) { return res.json(); })
+    .then(function(result) {
+      if (result.error) showToast('Sync error: ' + result.error);
+      else { showToast(result.message); loadNotes(); }
+    })
+    .catch(function() { showToast('Sync failed'); })
+    .finally(function() { btn.textContent = 'SYNC'; });
+}
+
+// ===== UI HELPERS =====
+function toggleAdvanced() {
+  document.getElementById('advancedFields').classList.toggle('open');
+  document.getElementById('advArrow').classList.toggle('open');
+}
+function openEditor() {
+  document.getElementById('editorModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeEditor() {
+  document.getElementById('editorModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+</script>
+</body></html>
