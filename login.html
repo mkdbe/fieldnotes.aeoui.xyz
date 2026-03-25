@@ -7,42 +7,223 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="Field Notes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Barlow', sans-serif; background: #0c0a08; color: #cec5b8;
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow', sans-serif;
+    background: #0c0a08;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   }
-  .login-box {
-    width: 90%; max-width: 340px; padding: 2.5rem 2rem; text-align: center;
-    border: 1px solid #252017; background: rgba(19,17,16,0.9);
+
+  .notebook {
+    width: 88%;
+    max-width: 320px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+    position: relative;
   }
-  h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.15em; color: #f5efe8; margin-bottom: 0.2rem; }
-  .sub { font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase; color: #6b6259; margin-bottom: 2rem; }
+
+  /* === GOLDEN COVER === */
+  .cover {
+    background: #f5a623;
+    padding: 2.8rem 1.8rem 1.6rem;
+    position: relative;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+
+  .cover h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    line-height: 0.88;
+    letter-spacing: 0.04em;
+    color: #2c1f17;
+    margin-bottom: 0;
+  }
+
+  /* === DARK BAND === */
+  .band {
+    background: #2c1f17;
+    padding: 1.2rem 1.8rem 1.4rem;
+    position: relative;
+  }
+
+  /* Top accent line */
+  .band::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: #d03c14;
+  }
+
+  .band-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #f5a623;
+    margin-bottom: 0.4rem;
+  }
+
+  .band-title {
+    font-family: 'Barlow', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #e8ddd0;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.15rem;
+  }
+
+  .band-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #7a6b5a;
+  }
+
+  /* === LOWER COVER (password area) === */
+  .lower {
+    background: #f5a623;
+    padding: 1.6rem 1.8rem 1rem;
+    position: relative;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+
   input[type="password"] {
-    width: 100%; padding: 0.8rem 1rem; background: #131110; border: 1px solid #252017;
-    color: #cec5b8; font-family: 'Barlow', sans-serif; font-size: 0.95rem;
-    margin-bottom: 1rem; outline: none; transition: border-color 0.2s;
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    background: rgba(44,31,23,0.08);
+    border: 1.5px solid #2c1f17;
+    color: #2c1f17;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.2s;
+    border-radius: 0;
+    -webkit-appearance: none;
   }
-  input[type="password"]:focus { border-color: #e8930e; }
-  button {
-    width: 100%; padding: 0.8rem; background: #e8930e; border: none; color: #0c0a08;
-    font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.15em;
-    cursor: pointer; transition: background 0.2s; font-weight: 700;
+  input[type="password"]::placeholder {
+    color: rgba(44,31,23,0.4);
+    font-style: italic;
+    font-weight: 300;
   }
-  button:hover { background: #f9a825; }
-  .error { color: #e8930e; font-size: 0.85rem; margin-bottom: 1rem; }
+  input[type="password"]:focus {
+    border-color: #2c1f17;
+    background: rgba(44,31,23,0.12);
+  }
+
+  .error {
+    color: #d03c14;
+    font-size: 0.8rem;
+    margin-bottom: 0.8rem;
+    font-weight: 500;
+  }
+
+  /* === BOTTOM BAND WITH ENTER === */
+  .bottom-band {
+    background: #2c1f17;
+    padding: 0;
+    display: flex;
+    position: relative;
+  }
+
+  .bottom-band::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: #d03c14;
+  }
+
+  .bottom-info {
+    flex: 1;
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .bottom-info span {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #7a6b5a;
+    display: block;
+    line-height: 1.6;
+  }
+
+  button[type="submit"] {
+    padding: 0.8rem 1.6rem;
+    background: #d03c14;
+    border: none;
+    color: #f5efe8;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-left: 1px solid rgba(255,255,255,0.06);
+  }
+  button[type="submit"]:hover { background: #e04520; }
+  button[type="submit"]:active { background: #b8321a; }
+
+  /* Grid pattern on bottom edge */
+  .grid-edge {
+    background: #2c1f17;
+    height: 20px;
+    position: relative;
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+  }
+  .grid-edge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,166,35,0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,166,35,0.12) 1px, transparent 1px);
+    background-size: 8px 8px;
+  }
+
+  /* Rounded corners on notebook */
+  .cover { border-radius: 6px 6px 0 0; }
 </style>
 </head><body>
-<div class="login-box">
-  <h1>FIELD NOTES</h1>
-  <div class="sub">4×5 Large Format</div>
-  <!--ERROR-->
-  <form method="POST" action="/login">
+
+<form method="POST" action="/login" class="notebook">
+  <div class="cover">
+    <h1>FIELD<br>NOTES</h1>
+  </div>
+
+  <div class="band">
+    <div class="band-label">Exposure Log</div>
+    <div class="band-title">4×5 Large Format</div>
+    <div class="band-sub">48-Sheet Film Holder Book</div>
+  </div>
+
+  <div class="lower">
+    <!--ERROR-->
     <input type="password" name="password" placeholder="Password" autofocus>
+  </div>
+
+  <div class="bottom-band">
+    <div class="bottom-info">
+      <span>Durable Materials</span>
+      <span>Pocket Size</span>
+    </div>
     <button type="submit">ENTER</button>
-  </form>
-</div>
+  </div>
+
+  <div class="grid-edge"></div>
+</form>
+
 </body></html>

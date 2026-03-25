@@ -85,6 +85,14 @@ app.use(session({
 // Static files
 app.use('/uploads', express.static(UPLOAD_DIR));
 
+// Favicon & icons (served without auth)
+app.get('/favicon.ico', function(req, res) {
+  res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+app.get('/apple-touch-icon.png', function(req, res) {
+  res.sendFile(path.join(__dirname, 'apple-touch-icon.png'));
+});
+
 // Auth middleware
 function requireAuth(req, res, next) {
   if (req.session && req.session.authenticated) return next();
